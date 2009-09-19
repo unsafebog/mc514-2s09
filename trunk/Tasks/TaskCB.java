@@ -62,7 +62,34 @@ public class TaskCB extends IflTaskCB
     */
     static public TaskCB do_create()
     {
-        // your code goes here
+        /* 1.Creation of Task object
+	   2.Resource Allocation
+	   3.Initializations
+	   4.Create PageTable
+	   5.Keep track of threads, communications ports, and files.
+	   5.1 create file object
+	   6.set task-creation time HClock
+	   7. set Task status
+	   8. set priority
+	   9. create swap file
+	   10. return Task object
+	  */
+	
+	
+	TaskCB theTask = new TaskCB();
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	return theTask;
 
     }
 
