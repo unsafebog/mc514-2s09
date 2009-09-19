@@ -22,217 +22,228 @@ import osp.Hardware.*;
 */
 public class TaskCB extends IflTaskCB
 {
-    /**
-       The task constructor. Must have
 
-       	   super();
+	int threadCounter;
+	OpenFile fileTable[];
+	ThreadCB threadTable[];
+	
+	/**
+	The task constructor. Must have
 
-       as its first statement.
+		super();
 
-       @OSPProject Tasks
-    */
-    public TaskCB()
-    {
-        super();
+	as its first statement.
 
-    }
+	@OSPProject Tasks
+	*/
+	public TaskCB()
+	{
+		super();
+		threadCounter = 0;  //Inicializes Thread Counter with 0.
 
-    /**
-       This method is called once at the beginning of the
-       simulation. Can be used to initialize static variables.
+	}
 
-       @OSPProject Tasks
-    */
-    public static void init()
-    {
-        // your code goes here
+	/**
+	This method is called once at the beginning of the
+	simulation. Can be used to initialize static variables.
 
-    }
+	@OSPProject Tasks
+	*/
+	public static void init()
+	{
+	// your code goes here
 
-    /** 
-        Sets the properties of a new task, passed as an argument. 
-        
-        Creates a new thread list, sets TaskLive status and creation time,
-        creates and opens the task's swap file of the size equal to the size
+	}
+
+	/** 
+	Sets the properties of a new task, passed as an argument. 
+
+	Creates a new thread list, sets TaskLive status and creation time,
+	creates and opens the task's swap file of the size equal to the size
 	(in bytes) of the addressable virtual memory.
 
 	@return task or null
 
-        @OSPProject Tasks
-    */
-    static public TaskCB do_create()
-    {
-        /* 1.Creation of Task object
-	   2.Resource Allocation
-	   3.Initializations
-	   4.Create PageTable
-	   5.Keep track of threads, communications ports, and files.
-	   5.1 create file object
-	   6.set task-creation time HClock
-	   7. set Task status
-	   8. set priority
-	   9. create swap file
-	   10. return Task object
-	  */
-	
-	
-	TaskCB theTask = new TaskCB();
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	return theTask;
-
-    }
-
-    /**
-       Kills the specified task and all of it threads. 
-
-       Sets the status TaskTerm, frees all memory frames 
-       (reserved frames may not be unreserved, but must be marked 
-       free), deletes the task's swap file.
-	
-       @OSPProject Tasks
-    */
-    public void do_kill()
-    {
-        // your code goes here
-
-    }
-
-    /** 
-	Returns a count of the number of threads in this task. 
-	
 	@OSPProject Tasks
-    */
-    public int do_getThreadCount()
-    {
-        // your code goes here
+	*/
+	static public TaskCB do_create(String newOwner)
+	{
+	/* 1.Creation of Task object
+		2.Resource Allocation
+		3.Initializations
+		4.Create PageTable
+		5.Keep track of threads, communications ports, and files.
+		5.1 create file object
+		6.set task-creation time HClock
+		7. set Task status
+		8. set priority
+		9. create swap file
+		10. return Task object
+		*/
 
-    }
 
-    /**
-       Adds the specified thread to this task. 
-       @return FAILURE, if the number of threads exceeds MaxThreadsPerTask;
-       SUCCESS otherwise.
-       
-       @OSPProject Tasks
-    */
-    public int do_addThread(ThreadCB thread)
-    {
-        // your code goes here
+		TaskCB newTask = new TaskCB();
 
-    }
+		PageTable newPageTable = new PageTable(newOwner);  // Creates PageTable object
+		TaskCB.setPageTable(newPageTable);                 // Associates Task with PageTable object
 
-    /**
-       Removes the specified thread from this task. 		
+		ThreadCB newThread = new ThreadCB.create(newTask); //Creates new thread for the task
+		threadCount++;                                     //increment thread counter
+		ThreadCB.addThread(newThread);                     //adds created thread to the ThreadCb's thread list
+		
+		
 
-       @OSPProject Tasks
-    */
-    public int do_removeThread(ThreadCB thread)
-    {
-        // your code goes here
 
-    }
 
-    /**
-       Return number of ports currently owned by this task. 
 
-       @OSPProject Tasks
-    */
-    public int do_getPortCount()
-    {
-        // your code goes here
 
-    }
 
-    /**
-       Add the port to the list of ports owned by this task.
-	
-       @OSPProject Tasks 
-    */ 
-    public int do_addPort(PortCB newPort)
-    {
-        // your code goes here
 
-    }
 
-    /**
-       Remove the port from the list of ports owned by this task.
 
-       @OSPProject Tasks 
-    */ 
-    public int do_removePort(PortCB oldPort)
-    {
-        // your code goes here
+		return theTask;
 
-    }
+	}
 
-    /**
-       Insert file into the open files table of the task.
+	/**
+	Kills the specified task and all of it threads. 
 
-       @OSPProject Tasks
-    */
-    public void do_addFile(OpenFile file)
-    {
-        // your code goes here
+	Sets the status TaskTerm, frees all memory frames 
+	(reserved frames may not be unreserved, but must be marked 
+	free), deletes the task's swap file.
 
-    }
+	@OSPProject Tasks
+	*/
+	public void do_kill()
+	{
+	// your code goes here
 
-    /** 
+	}
+
+	/** 
+	Returns a count of the number of threads in this task. 
+
+	@OSPProject Tasks
+	*/
+	public int do_getThreadCount()
+	{
+		return threadCounter;
+	}
+
+	/**
+	Adds the specified thread to this task. 
+	@return FAILURE, if the number of threads exceeds MaxThreadsPerTask;
+	SUCCESS otherwise.
+
+	@OSPProject Tasks
+	*/
+	public int do_addThread(ThreadCB thread)
+	{
+	// your code goes here
+
+	}
+
+	/**
+	Removes the specified thread from this task. 		
+
+	@OSPProject Tasks
+	*/
+	public int do_removeThread(ThreadCB thread)
+	{
+	// your code goes here
+
+	}
+
+	/**
+	Return number of ports currently owned by this task. 
+
+	@OSPProject Tasks
+	*/
+	public int do_getPortCount()
+	{
+	// your code goes here
+
+	}
+
+	/**
+	Add the port to the list of ports owned by this task.
+
+	@OSPProject Tasks 
+	*/ 
+	public int do_addPort(PortCB newPort)
+	{
+	// your code goes here
+
+	}
+
+	/**
+	Remove the port from the list of ports owned by this task.
+
+	@OSPProject Tasks 
+	*/ 
+	public int do_removePort(PortCB oldPort)
+	{
+	// your code goes here
+
+	}
+
+	/**
+	Insert file into the open files table of the task.
+
+	@OSPProject Tasks
+	*/
+	public void do_addFile(OpenFile file)
+	{
+	// your code goes here
+
+	}
+
+	/** 
 	Remove file from the task's open files table.
 
 	@OSPProject Tasks
-    */
-    public int do_removeFile(OpenFile file)
-    {
-        // your code goes here
+	*/
+	public int do_removeFile(OpenFile file)
+	{
+	// your code goes here
 
-    }
+	}
 
-    /**
-       Called by OSP after printing an error message. The student can
-       insert code here to print various tables and data structures
-       in their state just after the error happened.  The body can be
-       left empty, if this feature is not used.
-       
-       @OSPProject Tasks
-    */
-    public static void atError()
-    {
-        // your code goes here
+	/**
+	Called by OSP after printing an error message. The student can
+	insert code here to print various tables and data structures
+	in their state just after the error happened.  The body can be
+	left empty, if this feature is not used.
 
-    }
+	@OSPProject Tasks
+	*/
+	public static void atError()
+	{
+	// your code goes here
 
-    /**
-       Called by OSP after printing a warning message. The student
-       can insert code here to print various tables and data
-       structures in their state just after the warning happened.
-       The body can be left empty, if this feature is not used.
-       
-       @OSPProject Tasks
-    */
-    public static void atWarning()
-    {
-        // your code goes here
+	}
 
-    }
+	/**
+	Called by OSP after printing a warning message. The student
+	can insert code here to print various tables and data
+	structures in their state just after the warning happened.
+	The body can be left empty, if this feature is not used.
+
+	@OSPProject Tasks
+	*/
+	public static void atWarning()
+	{
+	// your code goes here
+
+	}
 
 
-    /*
-       Feel free to add methods/fields to improve the readability of your code
-    */
+	/*
+	Feel free to add methods/fields to improve the readability of your code
+	*/
 
-}
+	}
 
-/*
-      Feel free to add local classes to improve the readability of your code
-*/
+	/*
+	Feel free to add local classes to improve the readability of your code
+	*/
