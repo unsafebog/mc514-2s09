@@ -39,7 +39,7 @@ public class TaskCB extends IflTaskCB
 	public TaskCB()
 	{
 		super();
-		threadCounter = 0;  //Inicializes Thread Counter with 0.
+		
 
 	}
 
@@ -51,7 +51,7 @@ public class TaskCB extends IflTaskCB
 	*/
 	public static void init()
 	{
-	// your code goes here
+		threadCounter = 0;  //Inicializes Thread Counter with 0.
 
 	}
 
@@ -88,8 +88,10 @@ public class TaskCB extends IflTaskCB
 		TaskCB.setPageTable(newPageTable);                 // Associates Task with PageTable object
 
 		ThreadCB newThread = new ThreadCB.create(newTask); //Creates new thread for the task
-		threadCount++;                                     //increment thread counter
 		ThreadCB.addThread(newThread);                     //adds created thread to the ThreadCb's thread list
+		threadCount++;                                     //increment thread counter
+		
+		
 		
 		
 
