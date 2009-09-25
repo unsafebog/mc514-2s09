@@ -57,12 +57,14 @@ public class TaskCB extends IflTaskCB
 		String SwapPath = SwapDeviceMountPoint + Integer.toString(newTask.getID());
 	
 		int createdSwapFile = FileSys.create(SwapPath,(int) Math.pow(2, MMU.getVirtualAddressBits()));
+	
 		if( createdSwapFile == FAILURE )
 			TaskCB.atError();
+		
 		OpenFile swapFile = OpenFile.open(SwapPath, newTask);
 		newTask.setSwapFile(swapFile);
 		
-		firstThread = ThreadCB.create(newTask);
+		threads.append(ThreadCB.create(newTask));
 	
 		return newTask;
 	}
@@ -110,7 +112,6 @@ public class TaskCB extends IflTaskCB
 	
 	public int do_removeThread(ThreadCB thread)
 	{
-		System.out.printf("Remover:%d\n",threads.length());
 		if(threads.remove(thread) != null)
 			return SUCCESS;
 		else
