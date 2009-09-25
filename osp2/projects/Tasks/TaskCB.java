@@ -17,10 +17,15 @@ public class TaskCB extends IflTaskCB
 	static private GenericList ports;
 	static private GenericList files;
 	static private TaskCB newTask;
+	static private PageTable newPageTable;
+	static private String SwapPathName;
 	
 	public TaskCB()
 	{
 		super();
+		threads = new GenericList();
+		ports = new GenericList();
+		files = new GenericList();
 		
 	}
 
@@ -37,7 +42,7 @@ public class TaskCB extends IflTaskCB
 		newTask = new TaskCB();
 		
 		//Create page table
-		PageTable newPageTable = new PageTable(newTask);
+		newPageTable = new PageTable(newTask);
 		//Set Ttask's pagetable
 		newTask.setPageTable(newPageTable);
 		
@@ -48,7 +53,7 @@ public class TaskCB extends IflTaskCB
 		newTask.setCreationTime(HClock.get());
 		
 		//Creates swap file
-		String SwapPathName = SwapDeviceMountPoint;
+		SwapPathName = SwapDeviceMountPoint;
 		SwapPathName.concat(Integer.toString(newTask.getID()));
 		int createdSwapFile = FileSys.create(SwapPathName, MMU.getVirtualAddressBits());
 		//  AQUI FAZER O ERROR ****************************************************************
@@ -66,28 +71,40 @@ public class TaskCB extends IflTaskCB
 	
 	public void do_kill()
 	{
-		Enumeration remove = threads.forwardIterator();
-		while(remove.hasMoreElements())
-		{
-			Object obj = remove.nextElement();
-			newTask.do_remove(obj);
-		}
+		while(threads.length() != 0)
+			newTask.do_removeThread((ThreadCB) threads.getHead());
+		while(ports.length() != 0)
+			newTask.do_removePort((PortCB) ports.getHead());
 		
+		//Setar status da task
+		newTask.setStatus(TaskTerm);
+		
+		newPageTable.deallocateMemory();
+		
+		
+		while(files.length() != 0)
+			newTask.do_removeFile((OpenFile) files.getHead());
+		
+		FileSys.delete(SwapPathName);
 	}
 
 	
 	public int do_getThreadCount()
 	{
-		
-		return 0;
+		return threads.length();
 
 	}
 
 	
 	public int do_addThread(ThreadCB thread)
 	{
-		return 0;
-
+		if(newTask.do_getThreadCount() < ThreadCB.MaxThreadsPerTask())
+		{
+			threads.insert(thread);
+			return 1;
+		}
+		else
+			return 0;
 	}
 
 	
@@ -103,21 +120,29 @@ public class TaskCB extends IflTaskCB
 
 	public int do_getPortCount()
 	{
-		return 0;
-
+		
+		return ports.length();
 	}
 
 
 	public int do_addPort(PortCB newPort)
 	{
-		return 0;
+		if(ports.length() < PortCB.MaxPortsPerTask())
+		{
+			ports.insert(newPort);
+			return 1;
+		}
+		else
+			return 0;
 
 	}
 
 	public int do_removePort(PortCB oldPort)
 	{
-		return 0;
-
+		if(ports.remove(oldPort) != null)
+			return 1;
+		else
+			return 0;
 	}
 
 	public void do_addFile(OpenFile file)
@@ -128,8 +153,13 @@ public class TaskCB extends IflTaskCB
 
 	public int do_removeFile(OpenFile file)
 	{
-		return 0;
-
+		if(files.remove(file) != null)
+		{
+			file.close();
+			return 1;
+		}
+		else
+			return 0;
 	}
 	public static void atError()
 	{
