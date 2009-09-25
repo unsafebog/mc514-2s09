@@ -63,8 +63,9 @@ public class TaskCB extends IflTaskCB
 		
 		OpenFile swapFile = OpenFile.open(SwapPath, newTask);
 		newTask.setSwapFile(swapFile);
-		
-		threads.append(ThreadCB.create(newTask));
+		System.out.println(threads.length());
+		threads.insert(ThreadCB.create(newTask));
+		System.out.println(threads.length());
 	
 		return newTask;
 	}
@@ -101,7 +102,7 @@ public class TaskCB extends IflTaskCB
 	{
 		if(threads.length() < ThreadCB.MaxThreadsPerTask)
 		{
-			threads.append(thread);
+			threads.insert(thread);
 			
 			return SUCCESS;
 		}
