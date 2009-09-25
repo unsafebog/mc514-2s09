@@ -16,6 +16,9 @@ public class TaskCB extends IflTaskCB
 	static private GenericList threads;
 	static private GenericList ports;
 	static private GenericList files;
+	
+	static private ThreadCB firstThread;
+	
 	static private TaskCB newTask;
 	static private PageTable newPageTable;
 	static private String SwapPathName;
@@ -26,13 +29,11 @@ public class TaskCB extends IflTaskCB
 		threads = new GenericList();
 		ports = new GenericList();
 		files = new GenericList();
-		
 	}
 
 	
 	public static void init()
 	{
-	
 
 	}
 
@@ -53,27 +54,25 @@ public class TaskCB extends IflTaskCB
 		newTask.setCreationTime(HClock.get());
 		
 		//Creates swap file
-		SwapPathName = SwapDeviceMountPoint;
-		SwapPathName.concat(Integer.toString(newTask.getID()));
-		int createdSwapFile = FileSys.create(SwapPathName, MMU.getVirtualAddressBits());
-		//  AQUI FAZER O ERROR ****************************************************************
+		String SwapPath = SwapDeviceMountPoint + Integer.toString(newTask.getID());
+	
+		int createdSwapFile = FileSys.create(SwapPath,(int) Math.pow(2, MMU.getVirtualAddressBits()));
+		if( createdSwapFile == FAILURE )
+			TaskCB.atError();
+		OpenFile swapFile = OpenFile.open(SwapPath, newTask);
+		newTask.setSwapFile(swapFile);
 		
-		//Open swap file
-		OpenFile swap = OpenFile.open(SwapDeviceMountPoint, newTask);
-		newTask.setSwapFile(swap);
-		//  AQUI FAZER O ERROR ****************************************************************
-		
-		threads.insert(ThreadCB.create(newTask));
-		
+		firstThread = ThreadCB.create(newTask);
+	
 		return newTask;
 	}
 
 	
 	public void do_kill()
 	{
-		while(threads.length() != 0)
+		while(threads.isEmpty())
 			newTask.do_removeThread((ThreadCB) threads.getHead());
-		while(ports.length() != 0)
+		while(ports.isEmpty())
 			newTask.do_removePort((PortCB) ports.getHead());
 		
 		//Setar status da task
@@ -82,7 +81,7 @@ public class TaskCB extends IflTaskCB
 		newPageTable.deallocateMemory();
 		
 		
-		while(files.length() != 0)
+		while(files.isEmpty())
 			newTask.do_removeFile((OpenFile) files.getHead());
 		
 		FileSys.delete(SwapPathName);
@@ -98,23 +97,24 @@ public class TaskCB extends IflTaskCB
 	
 	public int do_addThread(ThreadCB thread)
 	{
-		if(newTask.do_getThreadCount() < ThreadCB.MaxThreadsPerTask())
+		if(threads.length() < ThreadCB.MaxThreadsPerTask)
 		{
-			threads.insert(thread);
-			return 1;
+			threads.append(thread);
+			
+			return SUCCESS;
 		}
 		else
-			return 0;
+			return FAILURE;
 	}
 
 	
 	public int do_removeThread(ThreadCB thread)
 	{
-		
+		System.out.printf("Remover:%d\n",threads.length());
 		if(threads.remove(thread) != null)
-			return 1;
+			return SUCCESS;
 		else
-			return 0;
+			return FAILURE;
 
 	}
 
@@ -127,28 +127,30 @@ public class TaskCB extends IflTaskCB
 
 	public int do_addPort(PortCB newPort)
 	{
-		if(ports.length() < PortCB.MaxPortsPerTask())
+		if(ports.length() < PortCB.MaxPortsPerTask)
 		{
 			ports.insert(newPort);
-			return 1;
+			return SUCCESS;
 		}
 		else
-			return 0;
+			return FAILURE;
 
 	}
 
 	public int do_removePort(PortCB oldPort)
 	{
 		if(ports.remove(oldPort) != null)
-			return 1;
+		{
+			oldPort.destroy();
+			return SUCCESS;
+		}
 		else
-			return 0;
+			return FAILURE;
 	}
 
 	public void do_addFile(OpenFile file)
 	{
-
-
+		files.insert(file);
 	}
 
 	public int do_removeFile(OpenFile file)
@@ -156,14 +158,14 @@ public class TaskCB extends IflTaskCB
 		if(files.remove(file) != null)
 		{
 			file.close();
-			return 1;
+			return SUCCESS;
 		}
 		else
-			return 0;
+			return FAILURE;
 	}
 	public static void atError()
 	{
-		System.out.println("oi");
+		
 
 	}
 
