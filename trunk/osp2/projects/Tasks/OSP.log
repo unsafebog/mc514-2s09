@@ -1,5 +1,5 @@
 Sim: 0 [EventEngine.EventDriver]  
-	Simulation Start Time: Fri Sep 25 21:36:46 EDT 2009
+	Simulation Start Time: Sat Sep 26 12:26:25 EDT 2009
 	Parameter file: Misc/params.osp
 
 	Legend:
@@ -30,6 +30,14 @@ Mod: 0 [FileSys.FileSys]
 	  File `/vm/1', blocksize=64 created on device 0
 Sim: 0 [IFLModules.FileSys]  
 	System call create(`/vm/1')  succeeded, as expected
+Sim: 0 [IFLModules.ThreadCB]  
+	Trying to create new thread for Task(1/L)
+Mod: 0 [Threads.ThreadCB]  
+	Created Thread(0:null/NN)
+Mod: 0 [Threads.ThreadCB]  
+	Successfully added Thread(0:1/RD) to Task(1/L)
+Sim: 0 [IFLModules.ThreadCB]  
+	Created new thread Thread(0:1/RD)
 Sim: 0 [IFLModules.OpenFile]  
 	System call open(`/vm/1')
 Sim: 0 [Tasks.TaskCB]  
@@ -40,14 +48,6 @@ Sim: 0 [IFLModules.OpenFile]
 	File `/vm/1' opened as Openfile(0:1/0)
 Sim: 0 [IFLModules.FileSys]  
 	System call open(`/vm/1')  succeeded, as expected
-Sim: 0 [IFLModules.ThreadCB]  
-	Trying to create new thread for Task(1/L)
-Mod: 0 [Threads.ThreadCB]  
-	Created Thread(0:null/NN)
-Mod: 0 [Threads.ThreadCB]  
-	Successfully added Thread(0:1/RD) to Task(1/L)
-Sim: 0 [IFLModules.ThreadCB]  
-	Created new thread Thread(0:1/RD)
 Sim: 0 [IFLModules.ThreadCB]  
 	Entering dispatch(); current running thread is null
 Mod: 0 [Threads.ThreadCB]  
@@ -3924,6 +3924,14 @@ Mod: 2959 [FileSys.FileSys]
 	  File `/vm/2', blocksize=64 created on device 0
 Sim: 2959 [IFLModules.FileSys]  
 	System call create(`/vm/2')  succeeded, as expected
+Sim: 2959 [IFLModules.ThreadCB]  
+	Trying to create new thread for Task(2/L)
+Mod: 2959 [Threads.ThreadCB]  
+	Created Thread(11:null/NN)
+Mod: 2959 [Threads.ThreadCB]  
+	Successfully added Thread(11:2/RD) to Task(2/L)
+Sim: 2959 [IFLModules.ThreadCB]  
+	Created new thread Thread(11:2/RD)
 Sim: 2959 [IFLModules.OpenFile]  
 	System call open(`/vm/2')
 Sim: 2959 [Tasks.TaskCB]  
@@ -3934,14 +3942,6 @@ Sim: 2959 [IFLModules.OpenFile]
 	File `/vm/2' opened as Openfile(4:2/0)
 Sim: 2959 [IFLModules.FileSys]  
 	System call open(`/vm/2')  succeeded, as expected
-Sim: 2959 [IFLModules.ThreadCB]  
-	Trying to create new thread for Task(2/L)
-Mod: 2959 [Threads.ThreadCB]  
-	Created Thread(11:null/NN)
-Mod: 2959 [Threads.ThreadCB]  
-	Successfully added Thread(11:2/RD) to Task(2/L)
-Sim: 2959 [IFLModules.ThreadCB]  
-	Created new thread Thread(11:2/RD)
 Sim: 2959 [IFLModules.ThreadCB]  
 	Entering dispatch(); current running thread is Thread(10:1/RU)
 Mod: 2959 [Threads.ThreadCB]  
@@ -7393,6 +7393,14 @@ Mod: 6156 [FileSys.FileSys]
 	  File `/vm/3', blocksize=64 created on device 0
 Sim: 6156 [IFLModules.FileSys]  
 	System call create(`/vm/3')  succeeded, as expected
+Sim: 6156 [IFLModules.ThreadCB]  
+	Trying to create new thread for Task(3/L)
+Mod: 6156 [Threads.ThreadCB]  
+	Created Thread(14:null/NN)
+Mod: 6156 [Threads.ThreadCB]  
+	Successfully added Thread(14:3/RD) to Task(3/L)
+Sim: 6156 [IFLModules.ThreadCB]  
+	Created new thread Thread(14:3/RD)
 Sim: 6156 [IFLModules.OpenFile]  
 	System call open(`/vm/3')
 Sim: 6156 [Tasks.TaskCB]  
@@ -7403,14 +7411,6 @@ Sim: 6156 [IFLModules.OpenFile]
 	File `/vm/3' opened as Openfile(10:3/0)
 Sim: 6156 [IFLModules.FileSys]  
 	System call open(`/vm/3')  succeeded, as expected
-Sim: 6156 [IFLModules.ThreadCB]  
-	Trying to create new thread for Task(3/L)
-Mod: 6156 [Threads.ThreadCB]  
-	Created Thread(14:null/NN)
-Mod: 6156 [Threads.ThreadCB]  
-	Successfully added Thread(14:3/RD) to Task(3/L)
-Sim: 6156 [IFLModules.ThreadCB]  
-	Created new thread Thread(14:3/RD)
 Sim: 6156 [IFLModules.ThreadCB]  
 	Entering dispatch(); current running thread is Thread(12:1/RU)
 Mod: 6156 [Threads.ThreadCB]  
@@ -14445,6 +14445,14 @@ Mod: 11282 [FileSys.FileSys]
 	  File `/vm/4', blocksize=64 created on device 0
 Sim: 11282 [IFLModules.FileSys]  
 	System call create(`/vm/4')  succeeded, as expected
+Sim: 11282 [IFLModules.ThreadCB]  
+	Trying to create new thread for Task(4/L)
+Mod: 11282 [Threads.ThreadCB]  
+	Created Thread(17:null/NN)
+Mod: 11282 [Threads.ThreadCB]  
+	Successfully added Thread(17:4/RD) to Task(4/L)
+Sim: 11282 [IFLModules.ThreadCB]  
+	Created new thread Thread(17:4/RD)
 Sim: 11282 [IFLModules.OpenFile]  
 	System call open(`/vm/4')
 Sim: 11282 [Tasks.TaskCB]  
@@ -14455,14 +14463,6 @@ Sim: 11282 [IFLModules.OpenFile]
 	File `/vm/4' opened as Openfile(12:4/0)
 Sim: 11282 [IFLModules.FileSys]  
 	System call open(`/vm/4')  succeeded, as expected
-Sim: 11282 [IFLModules.ThreadCB]  
-	Trying to create new thread for Task(4/L)
-Mod: 11282 [Threads.ThreadCB]  
-	Created Thread(17:null/NN)
-Mod: 11282 [Threads.ThreadCB]  
-	Successfully added Thread(17:4/RD) to Task(4/L)
-Sim: 11282 [IFLModules.ThreadCB]  
-	Created new thread Thread(17:4/RD)
 Sim: 11282 [IFLModules.ThreadCB]  
 	Entering dispatch(); current running thread is Thread(0:1/RU)
 Mod: 11282 [Threads.ThreadCB]  
@@ -19723,6 +19723,14 @@ Mod: 14296 [FileSys.FileSys]
 	  File `/vm/5', blocksize=64 created on device 0
 Sim: 14296 [IFLModules.FileSys]  
 	System call create(`/vm/5')  succeeded, as expected
+Sim: 14296 [IFLModules.ThreadCB]  
+	Trying to create new thread for Task(5/L)
+Mod: 14296 [Threads.ThreadCB]  
+	Created Thread(18:null/NN)
+Mod: 14296 [Threads.ThreadCB]  
+	Successfully added Thread(18:5/RD) to Task(5/L)
+Sim: 14296 [IFLModules.ThreadCB]  
+	Created new thread Thread(18:5/RD)
 Sim: 14296 [IFLModules.OpenFile]  
 	System call open(`/vm/5')
 Sim: 14296 [Tasks.TaskCB]  
@@ -19733,14 +19741,6 @@ Sim: 14296 [IFLModules.OpenFile]
 	File `/vm/5' opened as Openfile(14:5/0)
 Sim: 14296 [IFLModules.FileSys]  
 	System call open(`/vm/5')  succeeded, as expected
-Sim: 14296 [IFLModules.ThreadCB]  
-	Trying to create new thread for Task(5/L)
-Mod: 14296 [Threads.ThreadCB]  
-	Created Thread(18:null/NN)
-Mod: 14296 [Threads.ThreadCB]  
-	Successfully added Thread(18:5/RD) to Task(5/L)
-Sim: 14296 [IFLModules.ThreadCB]  
-	Created new thread Thread(18:5/RD)
 Sim: 14296 [IFLModules.ThreadCB]  
 	Entering dispatch(); current running thread is Thread(5:1/RU)
 Mod: 14296 [Threads.ThreadCB]  
@@ -31794,24 +31794,13 @@ Mod: 24360 [Threads.ThreadCB]
 	Entering do_kill(Thread(0:1/W0))
 Mod: 24360 [Threads.ThreadCB]  
 	Could not remove thread Thread(0:1/W0) from task Task(1/L)
-Sim: 24360 <<Warning!>> [IFLModules.ThreadCB]  
-	After do_kill(Thread(0:1/W0)): dispatch() should have been called
-
-	at osp.IFLModules.a0.O(IflThreadCB.java:577)
-	at osp.IFLModules.a0.kill(IflThreadCB.java:712)
-	at osp.Tasks.TaskCB.do_kill(TaskCB.java:83)
-	at osp.IFLModules.IflTaskCB.if(IflTaskCB.java:397)
-	at osp.IFLModules.af.void(IflTaskCB.java:955)
-	at osp.a.x.b(EventCallback.java:48)
-	at osp.a.u.s(EventDriver.java:124)
-	at osp.a.t.run(EngineThread.java:60)
 Sim: 24360 <<Error!>> [Tasks.TaskCB]  
 	After do_kill(Thread(0:1/W0)): Discrepancy in thread count for Task(1/L); Student value=14; OSP value=15
 	  Possible cause: Failed to add/remove a thread to/from task
 
 	at osp.IFLModules.IflTaskCB.N(IflTaskCB.java:856)
 	at osp.IFLModules.a0.kill(IflThreadCB.java:715)
-	at osp.Tasks.TaskCB.do_kill(TaskCB.java:83)
+	at osp.Tasks.TaskCB.do_kill(TaskCB.java:99)
 	at osp.IFLModules.IflTaskCB.if(IflTaskCB.java:397)
 	at osp.IFLModules.af.void(IflTaskCB.java:955)
 	at osp.a.x.b(EventCallback.java:48)

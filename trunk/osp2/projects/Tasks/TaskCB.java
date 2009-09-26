@@ -13,22 +13,18 @@ import osp.Hardware.*;
 public class TaskCB extends IflTaskCB
 {
 
-	static private GenericList threads;
-	static private GenericList ports;
-	static private GenericList files;
+	private GenericList threads;
+	private GenericList ports;
+	private GenericList files;
 	
-	static private ThreadCB firstThread;
-	
-	static private TaskCB newTask;
-	static private PageTable newPageTable;
-	static private String SwapPathName;
+	private ThreadCB firstThread;
+	private PageTable pageTable;
+
+	private String SwapPathName;
 	
 	public TaskCB()
 	{
 		super();
-		threads = new GenericList();
-		ports = new GenericList();
-		files = new GenericList();
 	}
 
 	
@@ -39,90 +35,134 @@ public class TaskCB extends IflTaskCB
 
 	static public TaskCB do_create()
 	{
-		//create task object
-		newTask = new TaskCB();
+		OpenFile swapFile;
+		int createdSwapFile;
 		
-		//Create page table
-		newPageTable = new PageTable(newTask);
-		//Set Ttask's pagetable
+		//create task object 
+		TaskCB newTask = new TaskCB();
+		
+		//Create and set page table
+		PageTable newPageTable = new PageTable(newTask);
 		newTask.setPageTable(newPageTable);
+		newTask.pageTable = newPageTable;
 		
-		//Set task' status
-		newTask.setStatus(TaskLive);
+		//Create appropriate structures for threads, ports and files
+		newTask.threads = new GenericList();
+		newTask.ports = new GenericList();
+		newTask.files = new GenericList();
 		
 		//Set creation time
 		newTask.setCreationTime(HClock.get());
 		
-		//Creates swap file
-		String SwapPath = SwapDeviceMountPoint + Integer.toString(newTask.getID());
-	
-		int createdSwapFile = FileSys.create(SwapPath,(int) Math.pow(2, MMU.getVirtualAddressBits()));
-	
+		//Set task status
+		newTask.setStatus(TaskLive);
+		
+		//Set task priority to 1, random value
+		newTask.setPriority(1);
+		
+		//Create string with complete path name for swap file
+		newTask.SwapPathName = SwapDeviceMountPoint + Integer.toString(newTask.getID());
+		
+		//Create swap file, condition for failure > return error
+		createdSwapFile = FileSys.create(newTask.SwapPathName, (int)Math.pow(2, MMU.getVirtualAddressBits()));
 		if( createdSwapFile == FAILURE )
 			TaskCB.atError();
 		
-		OpenFile swapFile = OpenFile.open(SwapPath, newTask);
+		//Handles de first thread for task
+		newTask.firstThread =  ThreadCB.create(newTask);
+		
+		//Set swap file for the current task
+		swapFile = OpenFile.open(newTask.SwapPathName, newTask);
+		if(swapFile == null)
+		{
+			newTask.atError();
+			newTask.firstThread.dispatch(); //Dispatch thread if open file fail
+			return null;
+		}
+		
+		//Set the swap file
 		newTask.setSwapFile(swapFile);
-		System.out.println(threads.length());
-		threads.insert(ThreadCB.create(newTask));
-		System.out.println(threads.length());
-	
+		
 		return newTask;
 	}
 
-	
 	public void do_kill()
 	{
-		while(threads.isEmpty())
-			newTask.do_removeThread((ThreadCB) threads.getHead());
-		while(ports.isEmpty())
-			newTask.do_removePort((PortCB) ports.getHead());
+		ThreadCB auxThread;
+		PortCB auxPort;
+		OpenFile auxFile;
 		
-		//Setar status da task
-		newTask.setStatus(TaskTerm);
+		//Iteration for thread kill
+		while(threads.length() >= 0)
+		{
+			auxThread = (ThreadCB) threads.removeHead();
+				auxThread.kill();
+		}
+// 		this.firstThread.kill();
 		
-		newPageTable.deallocateMemory();
+		//Iteration for port destroy
+// 		while(this.ports.isEmpty() == false)
+// 		{
+// 			
+// 			auxPort = (PortCB) this.ports.removeHead();
+// 				auxPort.destroy();
+// 		}
 		
+		//Set new task status
+		this.setStatus(TaskTerm);
 		
-		while(files.isEmpty())
-			newTask.do_removeFile((OpenFile) files.getHead());
+		//Deallocate memory
+		this.pageTable.deallocateMemory();
 		
-		FileSys.delete(SwapPathName);
+		//Delete swap file
+		FileSys.delete(this.SwapPathName);
+
+		//Iteration for file close
+		while(this.files.length() > 0)
+		{
+			auxFile = (OpenFile) this.files.removeHead();
+			if(auxFile != null)
+				auxFile.close();
+		}
 	}
 
 	
 	public int do_getThreadCount()
 	{
 		return threads.length();
-
 	}
 
 	
 	public int do_addThread(ThreadCB thread)
 	{
-		if(threads.length() < ThreadCB.MaxThreadsPerTask)
+		if(threads.length() < ThreadCB.MaxThreadsPerTask) //Verify the thread limit is not excceeded
 		{
-			threads.insert(thread);
-			
+			threads.append(thread);//insert new thread
 			return SUCCESS;
 		}
 		else
+		{
+			this.atError();
 			return FAILURE;
+		}
 	}
 
-	
 	public int do_removeThread(ThreadCB thread)
 	{
-		if(threads.remove(thread) != null)
+		//remove thread from the list
+		ThreadCB remove = (ThreadCB) threads.remove(thread);
+		remove.dispatch();
+		if(remove != null)
 			return SUCCESS;
 		else
+		{
+			this.atError();
 			return FAILURE;
-
+		}
 	}
 
 	public int do_getPortCount()
 	{
-		
 		return ports.length();
 	}
 
@@ -131,50 +171,51 @@ public class TaskCB extends IflTaskCB
 	{
 		if(ports.length() < PortCB.MaxPortsPerTask)
 		{
-			ports.insert(newPort);
+			ports.append(newPort);
 			return SUCCESS;
 		}
 		else
+		{
+			this.atError();
 			return FAILURE;
+		}
 
 	}
 
 	public int do_removePort(PortCB oldPort)
 	{
 		if(ports.remove(oldPort) != null)
-		{
-			oldPort.destroy();
 			return SUCCESS;
-		}
 		else
+		{
+			this.atError();
 			return FAILURE;
+		}
 	}
 
 	public void do_addFile(OpenFile file)
 	{
-		files.insert(file);
+		files.append(file);
 	}
 
 	public int do_removeFile(OpenFile file)
 	{
 		if(files.remove(file) != null)
-		{
-			file.close();
 			return SUCCESS;
-		}
 		else
+		{
+			this.atError();
 			return FAILURE;
+		}
 	}
 	public static void atError()
 	{
-		
-
+		System.out.println("\n\n Error during operation.\n\n");
 	}
 
 	public static void atWarning()
 	{
-
-
+		System.out.println("\n\n Warning.\n");
 	}
 
 	
