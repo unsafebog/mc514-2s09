@@ -8,6 +8,7 @@ import osp.Memory.*;
 import osp.FileSys.*;
 import osp.Utilities.*;
 import osp.Hardware.*;
+import java.util.Enumeration;
 
 
 public class TaskCB extends IflTaskCB
@@ -19,6 +20,7 @@ public class TaskCB extends IflTaskCB
 	
 	private ThreadCB firstThread;
 	private PageTable pageTable;
+	private OpenFile swapFile;
 
 	private String SwapPathName;
 	
@@ -72,8 +74,8 @@ public class TaskCB extends IflTaskCB
 		newTask.firstThread =  ThreadCB.create(newTask);
 		
 		//Set swap file for the current task
-		swapFile = OpenFile.open(newTask.SwapPathName, newTask);
-		if(swapFile == null)
+		newTask.swapFile = OpenFile.open(newTask.SwapPathName, newTask);
+		if(newTask.swapFile == null)
 		{
 			newTask.atError();
 			newTask.firstThread.dispatch(); //Dispatch thread if open file fail
@@ -81,7 +83,7 @@ public class TaskCB extends IflTaskCB
 		}
 		
 		//Set the swap file
-		newTask.setSwapFile(swapFile);
+		newTask.setSwapFile(newTask.swapFile);
 		
 		return newTask;
 	}
@@ -91,22 +93,23 @@ public class TaskCB extends IflTaskCB
 		ThreadCB auxThread;
 		PortCB auxPort;
 		OpenFile auxFile;
-		
+		Enumeration aux;
+
 		//Iteration for thread kill
-		while(threads.length() >= 0)
+		aux = this.threads.forwardIterator();
+		while(aux.hasMoreElements())
 		{
-			auxThread = (ThreadCB) threads.removeHead();
-				auxThread.kill();
+			auxThread = (ThreadCB) aux.nextElement();
+			auxThread.kill();
 		}
-// 		this.firstThread.kill();
 		
 		//Iteration for port destroy
-// 		while(this.ports.isEmpty() == false)
-// 		{
-// 			
-// 			auxPort = (PortCB) this.ports.removeHead();
-// 				auxPort.destroy();
-// 		}
+		aux = this.ports.forwardIterator();
+		while(aux.hasMoreElements())
+		{
+			auxPort = (PortCB) aux.nextElement();
+			auxPort.destroy();
+		}
 		
 		//Set new task status
 		this.setStatus(TaskTerm);
@@ -115,15 +118,17 @@ public class TaskCB extends IflTaskCB
 		this.pageTable.deallocateMemory();
 		
 		//Delete swap file
+		this.swapFile.close();
 		FileSys.delete(this.SwapPathName);
-
-		//Iteration for file close
-		while(this.files.length() > 0)
+		
+		//Iteration for close file
+		aux = this.files.forwardIterator();
+		while(aux.hasMoreElements())
 		{
-			auxFile = (OpenFile) this.files.removeHead();
-			if(auxFile != null)
-				auxFile.close();
+			auxFile = (OpenFile) aux.nextElement();
+			auxFile.close();
 		}
+		
 	}
 
 	
@@ -210,12 +215,12 @@ public class TaskCB extends IflTaskCB
 	}
 	public static void atError()
 	{
-		System.out.println("\n\n Error during operation.\n\n");
+		System.out.println("Error during operation.");
 	}
 
 	public static void atWarning()
 	{
-		System.out.println("\n\n Warning.\n");
+		System.out.println("Warning.");
 	}
 
 	
