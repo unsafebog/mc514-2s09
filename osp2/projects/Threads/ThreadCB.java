@@ -243,9 +243,11 @@ public class ThreadCB extends IflThreadCB
 		ThreadCB thdispatch = (ThreadCB) readyQueue.removeHead();
 		
 		//Put running thread in ready queue, change status
-		readyQueue.append(running);
-		running.setStatus(ThreadReady);
-		
+		if(running != null)
+		{
+			readyQueue.append(running);
+			running.setStatus(ThreadReady);
+		}
 		//put schedule thread in running status
 		running = thdispatch;
 		running.setStatus(ThreadRunning);
@@ -279,6 +281,8 @@ public class ThreadCB extends IflThreadCB
 	// your code goes here
 
 	}
+	
+	
 	
 	
 	
