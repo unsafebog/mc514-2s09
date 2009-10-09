@@ -51,11 +51,30 @@ public class ThreadCB extends IflThreadCB
 
 	@OSPProject Threads
 	*/
-	static public ThreadCB do_create(TaskCB task)
+	public static ThreadCB do_create(TaskCB task)
 	{
 	
+		int error;
 		//Create thread object
-		ThreadCB newThread = new ThreadCB();
+		ThreadCB thread = new ThreadCB();
+		
+		//Attach thread to its task
+		error = thread.addThread(thread);
+		if(error == FAILURE)
+		{
+			ThreadCB.atError();
+			return null;
+			}
+		
+		if(thread.getThreadCount() < MaxThreadsPerTask)
+			thread.setTask(task);
+		else
+		{
+			ThreadCB.atError();
+			return null;
+		}
+		
+		
 		
 		return null;
 	}
