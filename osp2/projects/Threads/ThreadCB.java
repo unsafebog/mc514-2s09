@@ -18,10 +18,13 @@ import osp.Resources.*;
 */
 public class ThreadCB extends IflThreadCB 
 {
+	GenericList readyQueue;
 
+	
 	public ThreadCB()
 	{
 		super();
+		readyQueue = new GenericList();
 	}
 
 	/**
@@ -59,24 +62,31 @@ public class ThreadCB extends IflThreadCB
 		ThreadCB thread = new ThreadCB();
 		
 		//Attach thread to its task
-		error = thread.addThread(thread);
+		error =task.addThread(thread);
 		if(error == FAILURE)
 		{
 			ThreadCB.atError();
 			return null;
 			}
 		
-		if(thread.getThreadCount() < MaxThreadsPerTask)
+		//Verify thread count
+		if(task.getThreadCount() < MaxThreadsPerTask)
 			thread.setTask(task);
 		else
 		{
 			ThreadCB.atError();
 			return null;
 		}
+		//Set priority -----------------------------------------
 		
+		//Set thread status and put on ready queue
+		thread.setStatus(ThreadReady);
+		thread.readyQueue.append(thread);
 		
+		//Thread dispatch
+		ThreadCB.dispatch();
 		
-		return null;
+		return thread;
 	}
 
 	/** 
@@ -94,7 +104,9 @@ public class ThreadCB extends IflThreadCB
 	*/
 	public void do_kill()
 	{
-	// your code goes here
+		
+		
+		
 
 	}
 
