@@ -18,13 +18,17 @@ import osp.Resources.*;
 */
 public class ThreadCB extends IflThreadCB 
 {
-	GenericList readyQueue;
+	static GenericList readyQueue;
+	static GenericList waitingQueue;
+	static ThreadCB running;
 
 	
 	public ThreadCB()
 	{
 		super();
 		readyQueue = new GenericList();
+		waitingQueue = new GenericList();
+		running = null;
 	}
 
 	/**
@@ -104,9 +108,50 @@ public class ThreadCB extends IflThreadCB
 	*/
 	public void do_kill()
 	{
+		//get status from thread to verify cases
+		int status = this.getStatus();
+		Device device;
+		this.setStatus(ThreadKill);
 		
+		TaskCB task = this.getTask();
 		
+		switch(status)
+		{
+			case ThreadReady://if ready remove from ready queue
+				this.readyQueue.remove(this); 
+				break;
+			
+			case ThreadRunning: //if running remove cpu control
+				ThreadCB.dispatch();
+				break;
+			
+			case ThreadWaiting:
+				for(int i = 0; i < Device.getTableSize(); i++)
+				{
+					device = Device.get(i);
+					device.cancelPendingIO(this);
+				}
+				break;
+		}
 		
+		//give up thread resources
+		ResourceCB.giveupResources(this);
+		
+		if(task.getThreadCount() != 0)
+		{
+			//remove from thread ready queue
+			this.readyQueue.removeHead();
+			//set as running thread
+			this.setStatus(ThreadRunning);
+			this.running = this;
+		}
+		else
+		{
+			//if has no more threads, kill task
+			task.kill();
+		}
+
+		this.readyQueue.remove(this);
 
 	}
 
@@ -128,8 +173,28 @@ public class ThreadCB extends IflThreadCB
 	*/
 	public void do_suspend(Event event)
 	{
-	// your code goes here
-
+		int status = this.getStatus();
+		//case = thread already waiting
+		if( status == ThreadWaiting )
+		{
+			//remove from queue
+			this.waitingQueue.remove(this);
+			//set new status
+			this.setStatus(ThreadWaiting+1);
+			//insert in the queue
+			this.waitingQueue.append(this);
+		}
+		//case = thread running
+		if( status == ThreadReady )
+		{
+			//lose control from CPU
+			this.dispatch();
+			//Set new status
+			this.setStatus(ThreadWaiting);
+			//put in queue
+			this.waitingQueue.append(this);
+		}
+		ThreadCB.dispatch();
 	}
 
 	/** Resumes the thread.
@@ -143,8 +208,20 @@ public class ThreadCB extends IflThreadCB
 	*/
 	public void do_resume()
 	{
-	// your code goes here
-
+		int status = this.getStatus();
+		//Status waiting > ready
+		if(status == ThreadWaiting)
+		{
+			this.waitingQueue.remove(this);
+			this.readyQueue.append(this);
+			this.setStatus(ThreadReady);
+		}
+		if(status != ThreadWaiting)
+			ThreadCB.atError();
+		else
+			this.setStatus(ThreadWaiting-1);
+		
+		ThreadCB.dispatch();
 	}
 
 	/** 
@@ -162,7 +239,17 @@ public class ThreadCB extends IflThreadCB
 	*/
 	public static int do_dispatch()
 	{
-	// your code goes here
+		//FCFS scheduling
+		ThreadCB thdispatch = (ThreadCB) readyQueue.removeHead();
+		
+		//Put running thread in ready queue, change status
+		readyQueue.append(running);
+		running.setStatus(ThreadReady);
+		
+		//put schedule thread in running status
+		running = thdispatch;
+		running.setStatus(ThreadRunning);
+		return SUCCESS;
 
 	}
 
@@ -176,7 +263,7 @@ public class ThreadCB extends IflThreadCB
 	*/
 	public static void atError()
 	{
-	// your code goes here
+		System.out.printf("Error Here\n\n\n");
 
 	}
 
@@ -192,5 +279,9 @@ public class ThreadCB extends IflThreadCB
 	// your code goes here
 
 	}
+	
+	
+	
+	
 }
 
