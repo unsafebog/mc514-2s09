@@ -95,7 +95,7 @@ public class ThreadCB extends IflThreadCB
 	must be called to resume a waiting thread.
 
 	@OSPProject Threads
-	*/
+	*/                                                                                   
 	public void do_kill()
 	{
 		Device device;
@@ -152,9 +152,9 @@ public class ThreadCB extends IflThreadCB
 		switch(this.getStatus())
 		{
 			case ThreadRunning:
+				this.setStatus(ThreadWaiting);
 				MMU.getPTBR().getTask().setCurrentThread(null);
 				MMU.setPTBR(null);
-				this.setStatus(ThreadWaiting);
 				event.addThread(this);
 				break;
 			case ThreadReady:
@@ -206,7 +206,6 @@ public class ThreadCB extends IflThreadCB
 			//Append thread ready on queue
 		if(this.getStatus() == ThreadReady)
 			readyQueue.append(this);
-			
 		ThreadCB.dispatch();
 	}
 
@@ -230,9 +229,16 @@ public class ThreadCB extends IflThreadCB
 			//If no running thread
 		if(MMU.getPTBR() == null)
 		{
-			readyThread = (ThreadCB) readyQueue.removeHead();
-			if(readyThread == null)
+			if(readyQueue.isEmpty())
+			{
 				return FAILURE;
+			}
+			readyThread = (ThreadCB) readyQueue.removeHead();
+			
+			if(readyThread == null)
+			{
+				return FAILURE;
+			}
 			readyThread.setStatus(ThreadRunning);
 			MMU.setPTBR(readyThread.getTask().getPageTable());
 			readyThread.getTask().setCurrentThread(readyThread);
@@ -241,9 +247,9 @@ public class ThreadCB extends IflThreadCB
 			//Get current running thread
 		runningThread = MMU.getPTBR().getTask().getCurrentThread();	
 			//if current running thread didn't spend quantum time, keep current running thread
-		if(runningThread.getTimeOnCPU() < 0.001)
+		if(runningThread.getTimeOnCPU()%2 < 1)
 			return SUCCESS;
-			
+		
 			//else, preempt running thread
 		runningThread.setStatus(ThreadReady);
 		readyQueue.append(runningThread);
@@ -255,16 +261,10 @@ public class ThreadCB extends IflThreadCB
 			//if thre is no ready to run thread, put last running thread to run
 		while(readyThread == null)
 			readyThread = (ThreadCB) readyQueue.removeHead();
-// 		if(readyThread == null)
-// 		{
-// 			readyQueue.remove(runningThread);
-// 			MMU.setPTBR(runningThread.getTask().getPageTable());
-// 			runningThread.getTask().setCurrentThread(runningThread);
-// 			return SUCCESS;
-// 		}
 		readyThread.setStatus(ThreadRunning);
 		MMU.setPTBR(readyThread.getTask().getPageTable());
 		readyThread.getTask().setCurrentThread(readyThread);
+
 		return SUCCESS;
 	}
 
