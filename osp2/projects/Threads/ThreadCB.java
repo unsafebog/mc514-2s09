@@ -18,20 +18,14 @@ import osp.Resources.*;
 */
 public class ThreadCB extends IflThreadCB 
 {
-	//Static variables because the list is shared between all threads
+	//Create ready queue list
 	static GenericList readyQueue;
-	static GenericList waitingQueue;
-	static ThreadCB running;
 
 	
 	public ThreadCB()
 	{
 		super();
-		
 		readyQueue = new GenericList();
-		waitingQueue = new GenericList();
-		
-		running = null;
 	}
 
 	/**
@@ -63,36 +57,30 @@ public class ThreadCB extends IflThreadCB
 	*/
 	public static ThreadCB do_create(TaskCB task)
 	{
-	
-		int error;
-		//Create thread object
-		ThreadCB thread = new ThreadCB();
-		
-		//Attach thread to its task
-		error = task.addThread(thread);
-		if(error == FAILURE)
+			//if task thread limit is not exceeded
+		if(task.getThreadCount() >= MaxThreadsPerTask)
 		{
-			ThreadCB.atError();
+			ThreadCB.dispatch();
 			return null;
 		}
-		
-		//Verify thread count
-		if(task.getThreadCount() < MaxThreadsPerTask)
-			thread.setTask(task);
-		else
-		{
-			ThreadCB.atError();
+			//new thread object
+		ThreadCB newThread = new ThreadCB();
+			//add thread to task
+		if(task.addThread(newThread) == FAILURE)
 			return null;
-		}
-		//Set priority -----------------------------------------
+			//set thread task
+		newThread.setTask(task);
 		
-		//Set thread status and put on ready queue
-		thread.setStatus(ThreadReady);
-		readyQueue.insert(thread);
+		//Set Priority --------------------------------------
+			//set new status
+		newThread.setStatus(ThreadReady);
+			//put in queue
+		readyQueue.append(newThread);
 		
 		ThreadCB.dispatch();
 		
-		return thread;
+		return newThread;
+		
 	}
 
 	/** 
@@ -110,58 +98,37 @@ public class ThreadCB extends IflThreadCB
 	*/
 	public void do_kill()
 	{
-		//Auxiliars
-		int DeviceSize;
 		Device device;
 		TaskCB task = this.getTask();
 		
-		//get status from thread to verify cases
-		int status = this.getStatus();
-
-		switch(status)
+		switch(this.getStatus())
 		{
-			case ThreadReady://if ready remove from ready queue
+				//if ready remove from ready queue
+			case ThreadReady:
 				readyQueue.remove(this); 
 				break;
-			
-			case ThreadRunning: //if running remove cpu control then remove
+				//if running remove cpu control then remove
+			case ThreadRunning: 
 				ThreadCB.dispatch();
 				readyQueue.remove(this);
 				break;
-			
-			case ThreadWaiting:
-				DeviceSize = Device.getTableSize();
-				for(int i = 0; i < DeviceSize; i++)
-				{
-					device = Device.get(i);
-					device.cancelPendingIO(this);
-				}
-				break;
+				//if ThreadWaiting+n cancel pending IO
 			default:
-				DeviceSize = Device.getTableSize();
-				for(int i = 0; i < DeviceSize; i++)
-				{
-					device = Device.get(i);
-					device.cancelPendingIO(this);
-				}
+				for(int i = 0; i < Device.getTableSize(); i++)
+					Device.get(i).cancelPendingIO(this);
 				break;
 		} 
-		
-		//give up thread resources
+			//give up thread resources
 		ResourceCB.giveupResources(this);
-		//Set status
+			//Set status
 		this.setStatus(ThreadKill);
-
-		//Remove the dead thread
+			//Remove the dead thread
 		task.removeThread(this);
-		//Dipatch new thread
-		ThreadCB.dispatch();
-		if(task.getThreadCount() == 0)
-		{
 			//if has no more threads, kill task
+		if(task.getThreadCount() == 0)
 			task.kill();
-		}
-
+			//Dipatch new thread
+		ThreadCB.dispatch();
 	}
 
 	/** Suspends the thread that is currenly on the processor on the 
@@ -182,26 +149,33 @@ public class ThreadCB extends IflThreadCB
 	*/
 	public void do_suspend(Event event)
 	{
-		int status = this.getStatus();
-		//case = thread already waiting
-		if(status == ThreadRunning)
+		switch(this.getStatus())
 		{
-			this.setStatus(ThreadWaiting);
-			waitingQueue.insert(this);
-			event.addThread(this);
+			case ThreadRunning:
+				MMU.getPTBR().getTask().setCurrentThread(null);
+				MMU.setPTBR(null);
+				this.setStatus(ThreadWaiting);
+				event.addThread(this);
+				break;
+			case ThreadReady:
+				readyQueue.remove(this);
+				this.setStatus(ThreadWaiting);
+				event.addThread(this);
+				return;
+			case ThreadWaiting:
+				event.removeThread(this);
+				this.setStatus(this.getStatus()+1);
+				event.addThread(this);
+				break;
+			default:
+				event.removeThread(this);
+				this.setStatus(this.getStatus()+1);
+				event.addThread(this);
+				break;
 		}
-		else if( status != ThreadRunning)
-		{
-			event.removeThread(this);
-			//set new status
-			status += 1;
-			this.setStatus(status);
-			event.addThread(this);
-		}
-		else
-			ThreadCB.atError();
 		//dispatch new thread
 		ThreadCB.dispatch();
+		
 	}
 
 	/** Resumes the thread.
@@ -215,23 +189,24 @@ public class ThreadCB extends IflThreadCB
 	*/
 	public void do_resume()
 	{
-		int status = this.getStatus();
-		
-		//Status waiting > ready
-		if(status == ThreadWaiting)
+			//Analog to Figure 2.1 from OSP book
+		switch(this.getStatus())
 		{
-			waitingQueue.remove(this);
-			readyQueue.insert(this);
-			this.setStatus(ThreadReady);
+			case ThreadRunning:
+			case ThreadReady:
+				return;
+			case ThreadWaiting:
+				this.setStatus(ThreadReady);
+				break;
+				//ThreadWaiting+n case
+			default:
+				this.setStatus(this.getStatus()-1);
+				break;
 		}
-		else if(status != ThreadWaiting)
-		{
-			status -= 1;
-			this.setStatus(status);
-		}
-		else
-			return;
-		
+			//Append thread ready on queue
+		if(this.getStatus() == ThreadReady)
+			readyQueue.append(this);
+			
 		ThreadCB.dispatch();
 	}
 
@@ -250,65 +225,47 @@ public class ThreadCB extends IflThreadCB
 	*/
 	public static int do_dispatch()
 	{
-		PageTable pagetable;
-		TaskCB task;
-		ThreadCB thread, threaddispatched;
-		if(readyQueue.isEmpty())
-			return SUCCESS;
-		else if(!readyQueue.isEmpty())
-		{
-			threaddispatched = ThreadCB.scheduler();
-			
-			//preempt current running thread
-			//Get current running thread
-			pagetable = MMU.getPTBR(); //step 1: get thread pagetable
-			if(pagetable == null && threaddispatched != null)
-			{
-				task = threaddispatched.getTask();//get the task that t belongs to
-				
-				pagetable = task.getPageTable();//get task pagetable
-				
-				MMU.setPTBR(pagetable);//Set pagetable register
-				
-				threaddispatched.setStatus(ThreadRunning); // set t status
-			
-				task.setCurrentThread(threaddispatched); //set new current thread
-				
-				return SUCCESS;
-			}
-			
-			//preempting
-			task = pagetable.getTask(); //step 2:get running task
-			thread = task.getCurrentThread(); // steap 3:get current running thread
-				
-			// Set status
-			if(thread.getTimeOnCPU() > 10.f)
-			{
-				readyQueue.insert(thread);
-				thread.setStatus(ThreadReady);
-			}
-			else
-			{
-				thread.setStatus(ThreadWaiting);
-				waitingQueue.insert(thread);
-			}
-			//dispatch
-			task = threaddispatched.getTask();//get the task that t belongs to
-			
-			pagetable = task.getPageTable();//get task pagetable
-			
-			MMU.setPTBR(pagetable);//Set pagetable register
-			
-			threaddispatched.setStatus(ThreadRunning); // set t status
+		ThreadCB runningThread, readyThread;
 		
-			task.setCurrentThread(threaddispatched); //set new current thread
-			
-			
-			
-/* ------------------ CONTEXT SWITCHING -----------------------------*/
+			//If no running thread
+		if(MMU.getPTBR() == null)
+		{
+			readyThread = (ThreadCB) readyQueue.removeHead();
+			if(readyThread == null)
+				return FAILURE;
+			readyThread.setStatus(ThreadRunning);
+			MMU.setPTBR(readyThread.getTask().getPageTable());
+			readyThread.getTask().setCurrentThread(readyThread);
 			return SUCCESS;
-		}
-		return FAILURE;
+		}	
+			//Get current running thread
+		runningThread = MMU.getPTBR().getTask().getCurrentThread();	
+			//if current running thread didn't spend quantum time, keep current running thread
+		if(runningThread.getTimeOnCPU() < 0.001)
+			return SUCCESS;
+			
+			//else, preempt running thread
+		runningThread.setStatus(ThreadReady);
+		readyQueue.append(runningThread);
+		MMU.setPTBR(null);
+		runningThread.getTask().setCurrentThread(null);
+			//dispatching
+			
+		readyThread = (ThreadCB) readyQueue.removeHead();
+			//if thre is no ready to run thread, put last running thread to run
+		while(readyThread == null)
+			readyThread = (ThreadCB) readyQueue.removeHead();
+// 		if(readyThread == null)
+// 		{
+// 			readyQueue.remove(runningThread);
+// 			MMU.setPTBR(runningThread.getTask().getPageTable());
+// 			runningThread.getTask().setCurrentThread(runningThread);
+// 			return SUCCESS;
+// 		}
+		readyThread.setStatus(ThreadRunning);
+		MMU.setPTBR(readyThread.getTask().getPageTable());
+		readyThread.getTask().setCurrentThread(readyThread);
+		return SUCCESS;
 	}
 
 	/**
@@ -337,20 +294,7 @@ public class ThreadCB extends IflThreadCB
 	// your code goes here
 
 	}
-	
-	public static ThreadCB scheduler()
-	{
-		ThreadCB thread;
-		if(!readyQueue.isEmpty())
-		{
-			thread = (ThreadCB) readyQueue.removeHead();
-			if(thread.getStatus() == ThreadReady)
-					return thread;
-		}
-		else
-			return null;
-		return null;
-	}
+
 	
 	
 	

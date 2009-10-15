@@ -20,8 +20,8 @@ public class TimerInterruptHandler extends IflTimerInterruptHandler
     */
     public void do_handleInterrupt()
     {
-        ThreadCB.do_dispatch();
-	HTimer.set(10);
+	HTimer.set(16);
+	ThreadCB.dispatch();
     }
 
 
