@@ -21,11 +21,10 @@ public class ResourceCB extends IflResourceCB
 
        @OSPProject Resources
     */
-    public ResourceCB(int qty)
-    {
-        // your code goes here
-
-    }
+	public ResourceCB(int qty)
+	{
+		super(qty);
+	}
 
     /**
        This method is called once, at the beginning of the
@@ -50,11 +49,12 @@ public class ResourceCB extends IflResourceCB
 
        @OSPProject Resources
     */
-    public RRB  do_acquire(int quantity) 
-    {
-        // your code goes here
+	public RRB  do_acquire(int quantity) 
+	{
+		TaskCB task = MMU.getPTBR().getTask();
+		int method = ResourceCB.getDeadlockMethod();
 
-    }
+	}
 
     /**
        Performs deadlock detection.
