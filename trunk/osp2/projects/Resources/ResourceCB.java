@@ -12,48 +12,56 @@ import osp.Memory.*;
     Students implement all the do_* methods.
     @OSPProject Resources
 */
+
 public class ResourceCB extends IflResourceCB
 {
-    /**
-       Creates a new ResourceCB instance with the given number of 
-       available instances. This constructor must have super(qty) 
-       as its first statement.
-
-       @OSPProject Resources
-    */
 	public ResourceCB(int qty)
 	{
 		super(qty);
 	}
-
-    /**
-       This method is called once, at the beginning of the
-       simulation. Can be used to initialize static variables.
-
-       @OSPProject Resources
-    */
-    public static void init()
-    {
-        // your code goes here
-
-    }
-
-    /**
-       Tries to acquire the given quantity of this resource.
-       Uses deadlock avoidance or detection depending on the
-       strategy in use, as determined by ResourceCB.getDeadlockMethod().
-
-       @param quantity
-       @return The RRB corresponding to the request.
-       If the request is invalid (quantity+allocated>total) then return null.
-
-       @OSPProject Resources
-    */
-	public RRB  do_acquire(int quantity) 
+	public static void init()
 	{
-		TaskCB task = MMU.getPTBR().getTask();
-		int method = ResourceCB.getDeadlockMethod();
+		// your code goes here
 
+	}
+
+	public RRB do_acquire(int quantity) 
+	{
+		//get thread wich request the resource
+		ThreadCB thread = MMU.getPTBR().getTask().getCurrentThread();
+		RRB rrb = new RRB(thread, this, quantity);
+		switch(ResourceCB.getDeadlockMethod())
+		{
+			case Detection:
+				if(quantity > rrb.resource.getTotal())
+					return null;
+				else if(quantity > rrb.resource.getAvailable())
+				{
+					rrb.setStatus(Suspended);
+					rrb.thread.suspend(rrb);
+					return rrb;
+				}
+				else
+				{
+					rrb.grant();
+					return rrb;
+				}	
+				break;
+			case Avoidance:
+				int bankers = 0;
+				if(this.getMaxClaim(rrb.thread)-quantity <= this.getAvailable())
+				{
+					rrb.grant();
+					return rrb;
+				}
+				else
+				{
+					rrb.setStatus(Suspended);
+					rrb.thread.suspend(rrb);
+					return null;
+				}
+				break;
+		}
 	}
 
     /**
@@ -62,11 +70,11 @@ public class ResourceCB extends IflResourceCB
 
        @OSPProject Resources
     */
-    public static Vector do_deadlockDetection()
-    {
-        // your code goes here
+	public static Vector do_deadlockDetection()
+	{
+		
 
-    }
+	}
 
     /**
        When a thread was killed, this is called to release all
@@ -89,11 +97,13 @@ public class ResourceCB extends IflResourceCB
 
         @OSPProject Resources
     */
-    public void do_release(int quantity)
-    {
-        // your code goes here
-
-    }
+	public void do_release(int quantity)
+	{
+		ThreadCB thread = MMU.getPTBR().getTask().getCurrentThread();
+		int qty = this.getAllocated(thread);
+		this.setAllocated(thread, 0);
+		this.setAvailable(qty+this.getAvailable());
+	}
 
     /** Called by OSP after printing an error message. The student can
 	insert code here to print various tables and data structures
@@ -120,11 +130,6 @@ public class ResourceCB extends IflResourceCB
         // your code goes here
 
     }
-
-
-    /*
-       Feel free to add methods/fields to improve the readability of your code
-    */
 
 }
 
