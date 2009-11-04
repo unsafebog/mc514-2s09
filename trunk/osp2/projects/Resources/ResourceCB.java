@@ -75,11 +75,12 @@ public class ResourceCB extends IflResourceCB
 
        @OSPProject Resources
     */
-    public static void do_giveupResources(ThreadCB thread)
-    {
-        // your code goes here
+	public static void do_giveupResources(ThreadCB thread)
+	{
+		int qty = this.getAllocated(thread);
+		
 
-    }
+	}
 
 	public void do_release(int quantity)
 	{
