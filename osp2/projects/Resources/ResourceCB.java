@@ -11,6 +11,7 @@ import osp.Memory.*;
 public class ResourceCB extends IflResourceCB
 {
 	RRB rrb;
+	static Hashtable request;
 
 	public ResourceCB(int qty)
 	{
@@ -19,28 +20,35 @@ public class ResourceCB extends IflResourceCB
 
 	public static void init()
 	{
+		request = new Hashtable(getSize());
 	}
 
-	public RRB  do_acquire(int quantity) 
+	public RRB do_acquire(int quantity) 
 	{
 		TaskCB task = MMU.getPTBR().getTask();
 		rrb = new RRB(quantity);
 		switch(RRB.getReasourceMethod())
 		{
 			case Avoidance:
-				if(this.bankers() == 1)
+				if(quantity + getAllocated() <= getMaxClaim(task.getThread()))//pediu no limite possivel
 				{
-					rrb.grant();
-					return rrb;
+					if(quantity <= getAvailable())//existe quantidade disponivel
+					{
+						if(safety(this) == 1)
+						{
+							grant(this);
+							return rrb;
+						}
+						else
+							return null
+					
+					}
+					else//nao existe quantidade disponivel
+						return null;
 				}
-				else
-				{
-					rrb.setStatus(Suspended);
-					task.getCurrentThread().suspend();
-					return rrb;
-				}
-				break;
-				
+				else//pediu mais que o maximo
+					return null;
+				break;		
 			case Detection:
 				if(quantity <= this.getAvailable())
 				{
@@ -57,57 +65,38 @@ public class ResourceCB extends IflResourceCB
 				}
 				break;
 		}
-		
 		return null;
+	}
+	//nao conseguimos implementar o sistema de definiçao de estado seguro.
+	public int safety(ResourceCB cb)
+	{
+		
 	}
 
 	public static Vector do_deadlockDetection()
 	{
-	// your code goes here
-
 	}
 
-    /**
-       When a thread was killed, this is called to release all
-       the resources owned by that thread.
-
-       @param thread -- the thread in question
-
-       @OSPProject Resources
-    */
 	public static void do_giveupResources(ThreadCB thread)
 	{
 		int qty = this.getAllocated(thread);
-		
-
 	}
 
 	public void do_release(int quantity)
 	{
 		ThreadCB thread = MMU.getPTBR().getTask().getCurrentThread();
-		this.setAllocated(thread, this.getAllocated(thread)-quantity);
-		this.setAvailable(this.getAvailable()+quantity);
+		this.setAllocated(thread, this.getAllocated(thread) - quantity);
+		this.setAvailable(this.getAvailable() + quantity);
 	}
 
 	public static void atError()
 	{
-	// your code goes here
 
 	}
 
 	public static void atWarning()
 	{
-	// your code goes here
 
-	}
-	
-	
-	///Implementar o algoritmo do bankeiro
-	public int bankers()
-	{
-		if(1)
-			return 1;
-		return 0;
 	}
 }
 
