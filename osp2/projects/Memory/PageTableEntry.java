@@ -25,11 +25,10 @@ public class PageTableEntry extends IflPageTableEntry
 
        @OSPProject Memory
     */
-    public PageTableEntry(PageTable ownerPageTable, int pageNumber)
-    {
-        // your code goes here
-
-    }
+	public PageTableEntry(PageTable ownerPageTable, int pageNumber)
+	{
+		super(ownerPageTable,pageNumber);
+	}
 
     /**
        This method increases the lock count on the page by one. 
@@ -45,11 +44,11 @@ public class PageTableEntry extends IflPageTableEntry
 
 	@OSPProject Memory
      */
-    public int do_lock(IORB iorb)
-    {
-        // your code goes here
+	public int do_lock(IORB iorb)
+	{
+		// your code goes here
 
-    }
+	}
 
     /** This method decreases the lock count on the page by one. 
 
@@ -57,19 +56,8 @@ public class PageTableEntry extends IflPageTableEntry
 
 	@OSPProject Memory
     */
-    public void do_unlock()
-    {
-        // your code goes here
-
-    }
-
-
-    /*
-       Feel free to add methods/fields to improve the readability of your code
-    */
-
+	public void do_unlock()
+	{
+		// your code goes here
+	}
 }
-
-/*
-      Feel free to add local classes to improve the readability of your code
-*/
